@@ -18,20 +18,18 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
-import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.MonitorNotifier;
-import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 public class BeaconMonitoring extends AppCompatActivity implements BeaconConsumer{
     private static final String TAG = "TESTING-BEACONS";
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 4;
     private static final String API_URL = "http://192.168.1.12:8080";
+    private static final String ENTER = "/enter/";
+    private static final String LEAVE = "/leave/";
 
     private BeaconManager mBeaconManager;
     private RequestQueue requestQ;
@@ -91,11 +89,6 @@ public class BeaconMonitoring extends AppCompatActivity implements BeaconConsume
     }
 
     @Override
-    public void onResume(){
-        super.onResume();
-    }
-
-    @Override
     public void onBeaconServiceConnect(){
         Log.d(TAG, "Connect");
         mBeaconManager.addMonitorNotifier(new MonitorNotifier() {
@@ -104,13 +97,13 @@ public class BeaconMonitoring extends AppCompatActivity implements BeaconConsume
                 Log.i(TAG, "I just saw an beacon for the first time!");
                 Log.i(TAG, "-id1:" + region.getId1());
                 Log.i(TAG, "-id2:" + region.getId2());
-                sendEnteredRegionRequest(1);
-
+                sendRegionRequest(1, ENTER);
             }
 
             @Override
             public void didExitRegion(Region region) {
                 Log.i(TAG, "I no longer see an beacon");
+                sendRegionRequest(1, LEAVE);
             }
 
             @Override
@@ -121,7 +114,9 @@ public class BeaconMonitoring extends AppCompatActivity implements BeaconConsume
 
         try {
             mBeaconManager.startMonitoringBeaconsInRegion(new Region("myMonitoringUniqueId", null, null, null));
-        } catch (RemoteException e) {    }
+        } catch (RemoteException e) {
+            Log.d(TAG, "Unable to start monitoring for beacons");
+        }
     }
 
     @Override
@@ -131,19 +126,19 @@ public class BeaconMonitoring extends AppCompatActivity implements BeaconConsume
     }
 
 
-    // Initiate a search
-    private void sendEnteredRegionRequest(int beaconInstance) {
+    // Initiate a request to the local node server
+    private void sendRegionRequest(int beaconInstance, String action) {
         // Make a request
         final Context self = this;
-        Log.d(TAG, API_URL + "/enter/" + beaconInstance + "/");
-        StringRequest res = new StringRequest(Request.Method.POST, API_URL + "/enter/" + beaconInstance + "/",
+        Log.d(TAG, API_URL + action + beaconInstance + "/");
+        StringRequest res = new StringRequest(Request.Method.POST, API_URL + action + beaconInstance + "/",
                 new Response.Listener<String>() {
                     // On response
                     @Override
                     public void onResponse(String response) {
                         Log.d(TAG, "Response:" + response);
                         try {
-                            Toast toast = Toast.makeText(self, response, Toast.LENGTH_SHORT);
+                            Toast toast = Toast.makeText(self, response, Toast.LENGTH_LONG);
                             toast.show();
                         } catch (Exception e) {
                             // Print to console on error
