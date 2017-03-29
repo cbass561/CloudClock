@@ -16,6 +16,7 @@ import android.os.RemoteException;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.Toast;
 
 import org.altbeacon.beacon.BeaconConsumer;
@@ -37,7 +38,7 @@ public class BeaconMonitoring extends AppCompatActivity implements BeaconConsume
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_beacon_monitoring);
+        setContentView(R.layout.activity_main);
         mBeaconManager = BeaconManager.getInstanceForApplication(this.getApplicationContext());
         mBeaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(BeaconParser.EDDYSTONE_UID_LAYOUT));
         mBeaconManager.bind(this);
@@ -157,5 +158,19 @@ public class BeaconMonitoring extends AppCompatActivity implements BeaconConsume
 
         // Start the request
         requestQ.add(res);
+    }
+    private void changeButtonState(){
+        Button statusBttn = (Button)findViewById(R.id.statusBttn);
+        boolean bttnStatus = (statusBttn.getBackground().equals(R.color.lightRed)) ? false : true;
+        if(bttnStatus) {
+            // go red because we are green
+            statusBttn.setBackgroundColor(getColor(R.color.lightRed));
+            statusBttn.setText("Checked Out!");
+        }
+        else {
+            //go green because we are red
+            statusBttn.setBackgroundColor(getColor(R.color.green));
+            statusBttn.setText("Checked In!");
+        }
     }
 }
